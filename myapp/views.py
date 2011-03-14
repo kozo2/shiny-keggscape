@@ -104,4 +104,4 @@ def pathway(request, pathway_id):
     return render_to_response('myapp/cytoscape.html', {'pathway_id': pathway_id, 'pathway_name': pathway_name, 'alphabetical_organism': alphabetical_organism, 'selected_organism_code': selected_organism_code, 'selected_organism_name': selected_organism_name, 'json_layout': json_layout, 'json_data': json_data})
 
   else:
-    return render_to_response('myapp/cytoscape.html', {'pathway_id': pathway_id, 'pathway_name': pathway_name, 'alphabetical_organism': alphabetical_organism})
+    return render_to_response('myapp/pathway.html', {'pathway_id': pathway_id, 'pathway_name': pathway_name, 'alphabetical_organism': alphabetical_organism})
