@@ -9,8 +9,8 @@
 please select organism for {{ pathway_name }}
 <form action="" method="POST">
 <select name="organism">
-    {% for org in organisms %}
-    <option value="{{ org.code }}">{{ org.name }}</option>
+    {% for org in alphabetical_organism %}
+    <option value="{{ org[0] }}">{{ org[1] }}</option>
     {% endfor %}
 </select>
 <input type="submit" value="submit">
