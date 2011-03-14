@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+    <head>
+        <title>Cytoscape Web example</title>
+        <!-- JSON support for IE (needed to use JS API) -->
+        <script type="text/javascript" src="/js/min/json2.min.js"></script>
+        <!-- Flash embedding utility (needed to embed Cytoscape Web) -->
+        <script type="text/javascript" src="/js/min/AC_OETags.min.js"></script>
+        <!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
+        <script type="text/javascript" src="/js/min/cytoscapeweb.min.js"></script>
+
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+        <script type="text/javascript" src="https://github.com/jamespadolsey/jQuery-Plugins/raw/master/cross-domain-ajax/jquery.xdomainajax.js"></script>
+
+        <script type="text/javascript">
+            window.onload=function() {
+                // id of Cytoscape Web container div
+                var div_id = "cytoscapeweb";
+                
+                // you could also use other formats (e.g. GraphML) or grab the network data via AJAX
+                var network_json = {
+                    {{ json_data|safe }}
+                };
+
+		// visual style mappers we will use
+		var shape_mapper = {
+		    discreteMapper: {
+			attrName: "type",
+                        entries: [
+                            { attrValue: "gene",     value: "RECTANGLE" },
+                            { attrValue: "compound", value: "ELLIPSE" },
+                            { attrValue: "map",      value: "ROUNDRECT" },
+                            { attrValue: "ortholog", value: "RECTANGLE" }
+			]
+		    }
+		};
+
+		var size_mapper = {
+                    discreteMapper: {
+                        attrName: "type",
+                        entries: [
+                            { attrValue: "gene",     value: 32 },
+                            { attrValue: "compound", value: 8 },
+                            { attrValue: "map",      value: 64 },
+                            { attrValue: "ortholog", value: 32 }
+			]
+		    }
+		};
+
+		var color_mapper = {
+                    discreteMapper: {
+                        attrName: "type",
+                        entries: [
+                            { attrValue: "gene",     value: "C0EB78" },
+                            { attrValue: "compound", value: "FFFFFF" },
+                            { attrValue: "map",      value: "FFFFFF" },
+                            { attrValue: "ortholog", value: "FFFFFF" }
+			]
+		    }
+		};
+
+		var edge_style_mapper = {
+                    discreteMapper: {
+                        attrName: "edgetype",
+                        entries: [
+                            { attrValue: "maplink", value: "LONG_DASH"}
+		        ]
+		    }
+		};
+
+                var target_allow_shape_mapper = {
+                    discreteMapper: {
+                        attrName: "edgetype",
+                        entries: [
+                            { attrValue: "rev_rea2sub", value: "DELTA"},
+                            { attrValue: "irr_rea2sub", value: "NONE"},
+                            { attrValue: "rev_rea2pro", value: "DELTA"},
+                            { attrValue: "irr_rea2pro", value: "DELTA"},
+                            { attrValue: "maplink",     value: "NONE"}
+                        ]
+                    }
+                };
+
+		// visual style we will use
+		var visual_style = {
+		    nodes: {
+			shape: shape_mapper,
+			size:  size_mapper,
+			color: color_mapper
+		    },
+                    edges: {
+                        style:            edge_style_mapper,
+                        targetArrowShape: target_allow_shape_mapper
+                    }
+		};
+
+                // initialization options
+                var options = {
+                    // where you have the Cytoscape Web SWF
+                    swfPath: "/swf/CytoscapeWeb",
+                    // where you have the Flash installer SWF
+                    flashInstallerPath: "/swf/playerProductInstall"
+                };
+                
+                // init and draw
+                var vis = new org.cytoscapeweb.Visualization(div_id, options);
+
+                // callback when Cytoscape Web has finished drawing
+                vis.ready(function() {
+                     
+                    // add a listener for when nodes and edges are clicked
+                    vis.addListener("click", "nodes", function(event) {
+                        handle_click(event);
+                    });
+		    /*
+                    .addListener("click", "edges", function(event) {
+                        handle_click(event);
+                    });
+		    */
+
+                    function handle_click(event) {
+                        var target = event.target;
+
+			if(target.data.type == 'gene') {
+			    $.ajax({
+				url: target.data.link,
+				type: "GET",
+				success: function(data){
+				    $("#note").html($(data.responseText).find(".fr1"));
+                                }
+                            });
+			}
+			else if(target.data.type == 'compound') {
+			    $.ajax({
+				url: target.data.link,
+				type: "GET",
+				success: function(data){
+				    $("#note").html($(data.responseText).find(".fr2"));
+                                }
+                            });
+			}
+			else if(target.data.type == 'map') {
+			    $.ajax({
+				url: target.data.link,
+				type: "GET",
+				success: function(data){
+				    $("#note").html($(data.responseText).find(".fr3"));
+                                }
+                            });
+			}
+			else if(target.data.type == 'ortholog') {
+			    $.ajax({
+				url: target.data.link,
+				type: "GET",
+				success: function(data){
+				    $("#note").html($(data.responseText).find(".fr4"));
+                                }
+                            });
+                        }
+		    }
+                });
+
+                // layout options
+                var layout_options = {
+                    fitToScreen: true,
+                    {{ json_layout|safe }}
+                };
+
+                // draw options
+                var draw_options = {
+                    // your data goes here
+                    network: network_json,
+                    // pan zoom settings
+                    panZoomControlVisible: true,
+                    // layout settings
+                    layout: { name: "Preset",
+                              options: layout_options
+                            },
+		    // set the style at initialization
+		    visualStyle: visual_style
+                };
+
+                vis.draw(draw_options);
+            };
+        </script>
+        
+        <style>
+            * { margin: 0; padding: 0; font-family: Helvetica, Arial, Verdana, sans-serif; }
+            html, body { height: 100%; width: 100%; padding: 0; margin: 0; }
+            body { line-height: 1.5; color: #000000; font-size: 14px; }
+            /* The Cytoscape Web container must have its dimensions set. */
+            #cytoscapeweb { float: left; width: 65%; height: 100%; }
+            #note { float: right; width: 35%; height: 100%; }
+            p { padding: 0 0.5em; margin: 0; }
+            p:first-child { padding-top: 0.5em; }
+        </style>
+
+    </head>
+    
+    <body>
+        {{ pathway_name }} of
+        <form action="" method="POST">
+            <select name="organism">
+                {% for org in alphabetical_organism %}
+                {% if org.code == selected_organism_code %}
+                <option value="{{ org[0] }}" selected>{{ org[1] }}</option>
+                {% else %}
+                <option value="{{ org[0] }}">{{ org[1] }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <input type="submit" value="submit">
+        </form>
+        <a href="ftp://ftp.genome.jp/pub/kegg/xml/kgml/metabolic/organisms/{{ selected_organism_code }}/{{ selected_organism_code }}{{ pathway_id }}.xml">Please drag and drop this link to Cytoscape to import this pathway to Cytoscape</a>
+        &nbsp;
+        &nbsp;
+        <a href="/">Back to pathway selection</a>
+
+        <div id="cytoscapeweb">
+            Cytoscape Web will replace the contents of this div with your graph.
+        </div>
+        <div id="note">
+            <p>Please click nodes to show the entry data.</p>
+        </div>
+
+    </body>
+</html>
+
