@@ -202,7 +202,7 @@
         <form action="" method="POST">
             <select name="organism">
                 {% for org in alphabetical_organism %}
-                {% if org.code == selected_organism_code %}
+                {% if org[0] == selected_organism_code %}
                 <option value="{{ org[0] }}" selected>{{ org[1] }}</option>
                 {% else %}
                 <option value="{{ org[0] }}">{{ org[1] }}</option>
